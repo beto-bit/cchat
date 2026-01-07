@@ -19,14 +19,11 @@ LDFLAGS :=
 TARGET := build/cchat
 BUILDDIR := build
 
-# Header only
-DEPS := include/deps/clay.h
-
 SRCS := src/main.c
 OBJS := ${SRCS:%.c=${BUILDDIR}/%.o}
 
 
-${TARGET}: ${OBJS} ${BUILDDIR}/deps.o
+${TARGET}: ${BUILDDIR}/deps/clay.o ${OBJS}
 	@ echo "Linking..."
 	@ mkdir -p $(dir $@)
 	@ ${CC} ${LDFLAGS} $^ -o $@
@@ -36,16 +33,18 @@ ${BUILDDIR}/%.o: %.c
 	@ mkdir -p $(dir $@)
 	@ ${CC} ${CFLAGS} -MD $< -c -o $@
 
-${BUILDDIR}/deps.o: ${DEPS}
-	@ echo "Compiling Header-Only Dependencies..."
+# Header only
+${BUILDDIR}/deps/clay.o: include/deps/clay.h
+	@ echo "Compiling Dependency: Clay..."
 	@ mkdir -p $(dir $@)
-	@ ${CC} -c -x c ${CFLAGS} ${LDFLAGS} $^ -o $@
+	@ ${CC} -c -x c -DCLAY_IMPLEMENTATION ${CFLAGS} -w ${LDFLAGS} $^ -o $@
+
 
 run: ${TARGET}
 	./${TARGET}
 
 clean:
-	rm -rf ${TARGET} ${OBJS} ${OBJS:.o=.d} ${BUILDDIR}/deps.o
+	rm -rf ${TARGET} ${OBJS} ${OBJS:.o=.d} ${BUILDDIR}/deps/clay.o
 
 clean_all: clean
 	rm -rf calls.strace compile_flags.txt
