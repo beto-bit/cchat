@@ -11,18 +11,22 @@ CFLAGS := -std=c23 -g -O2 \
 			-Wdouble-promotion -Wfloat-equal -Wpointer-arith \
 			-Wcast-qual -Wcast-align -Wconversion -Wold-style-definition \
 			-Wvla -Wformat=2 -Wlogical-op -Wnull-dereference \
-			-Werror=return-local-addr -Werror=return-type
+			-Werror=return-local-addr -Werror=return-type \
+			-isystem ./include/deps
 
 LDFLAGS :=
 
 TARGET := build/cchat
 BUILDDIR := build
 
+# Header only
+DEPS := include/deps/clay.h
+
 SRCS := src/main.c
 OBJS := ${SRCS:%.c=${BUILDDIR}/%.o}
 
 
-${TARGET}: ${OBJS}
+${TARGET}: ${OBJS} ${BUILDDIR}/deps.o
 	@ echo "Linking..."
 	@ mkdir -p $(dir $@)
 	@ ${CC} ${LDFLAGS} $^ -o $@
@@ -32,12 +36,16 @@ ${BUILDDIR}/%.o: %.c
 	@ mkdir -p $(dir $@)
 	@ ${CC} ${CFLAGS} -MD $< -c -o $@
 
+${BUILDDIR}/deps.o: ${DEPS}
+	@ echo "Compiling Header-Only Dependencies..."
+	@ mkdir -p $(dir $@)
+	@ ${CC} -c -x c ${CFLAGS} ${LDFLAGS} $^ -o $@
 
 run: ${TARGET}
 	./${TARGET}
 
 clean:
-	rm -rf ${TARGET} ${OBJS} ${OBJS:.o=.d}
+	rm -rf ${TARGET} ${OBJS} ${OBJS:.o=.d} ${BUILDDIR}/deps.o
 
 clean_all: clean
 	rm -rf calls.strace compile_flags.txt

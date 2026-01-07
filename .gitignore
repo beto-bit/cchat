@@ -56,3 +56,4 @@ dkms.conf
 
 # Build
 build/
+compile_flags.txt
