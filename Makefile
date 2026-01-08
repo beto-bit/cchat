@@ -12,9 +12,10 @@ CFLAGS := -std=c23 -g -O2 \
 			-Wcast-qual -Wcast-align -Wconversion -Wold-style-definition \
 			-Wvla -Wformat=2 -Wlogical-op -Wnull-dereference \
 			-Werror=return-local-addr -Werror=return-type \
-			-isystem ./include/deps
+			-isystem ./include/deps \
+			$(shell pkg-config --cflags raylib)
 
-LDFLAGS :=
+LDFLAGS := $(shell pkg-config --libs raylib)
 
 TARGET := build/cchat
 BUILDDIR := build
