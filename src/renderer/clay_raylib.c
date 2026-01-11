@@ -34,6 +34,12 @@ static inline Rectangle clay_bbox_to_raylib_rectangle(Clay_BoundingBox box) {
     };
 }
 
+[[gnu::always_inline]]
+static inline bool equal(float a, float b) {
+    constexpr float EPSILON = 1e-9f;
+    return fabsf(a - b) < EPSILON;
+}
+
 
 Clay_Dimensions Raylib_MeasureText(
     Clay_StringSlice text,
@@ -139,6 +145,29 @@ static void clay_render_rectangle(Clay_BoundingBox boundingbox, Clay_RectangleRe
     }
 }
 
+static void clay_render_image(Clay_BoundingBox boundingBox, Clay_ImageRenderData* imageData) {
+    Texture2D imageTexture = *(Texture2D*) imageData->imageData;
+    Clay_Color tintColor = imageData->backgroundColor;
+
+    if (
+        equal(tintColor.r, 0)
+        && equal(tintColor.g, 0)
+        && equal(tintColor.b, 0)
+        && equal(tintColor.a, 0)
+    ) {
+        tintColor = (Clay_Color) { 255, 255, 255, 255 };
+    }
+
+    DrawTexturePro(
+        imageTexture,
+        (Rectangle) { 0, 0, (float) imageTexture.width, (float) imageTexture.height },
+        (Rectangle) { boundingBox.x, boundingBox.y, boundingBox.width, boundingBox.height },
+        (Vector2) {},
+        0,
+        clay_color_to_raylib_color(tintColor)
+    );
+}
+
 void Clay_Raylib_Render(Clay_RenderCommandArray renderCommands) {
     for (int idx = 0; idx < renderCommands.length; ++idx)
     {
@@ -159,12 +188,24 @@ void Clay_Raylib_Render(Clay_RenderCommandArray renderCommands) {
                 clay_render_rectangle(boundingBox, &renderCommand->renderData.rectangle);
                 break;
 
-            case CLAY_RENDER_COMMAND_TYPE_IMAGE: {
-            }
+            case CLAY_RENDER_COMMAND_TYPE_IMAGE:
+                clay_render_image(boundingBox, &renderCommand->renderData.image);
+                break;
+
             case CLAY_RENDER_COMMAND_TYPE_SCISSOR_START: {
+                BeginScissorMode(
+                    (int) roundf(boundingBox.x),
+                    (int) roundf(boundingBox.y),
+                    (int) roundf(boundingBox.width),
+                    (int) roundf(boundingBox.height)
+                );
+                break;
             }
-            case CLAY_RENDER_COMMAND_TYPE_SCISSOR_END: {
-            }
+
+            case CLAY_RENDER_COMMAND_TYPE_SCISSOR_END:
+                EndScissorMode();
+                break;
+
             case CLAY_RENDER_COMMAND_TYPE_BORDER: {
             }
             case CLAY_RENDER_COMMAND_TYPE_CUSTOM: {
