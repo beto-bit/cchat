@@ -1,7 +1,6 @@
 #pragma once
 
 #include "clay.h"
-#include "raylib.h"
 
 
 void Clay_Raylib_Initialize(int width, int height, const char* title, unsigned int flags);
