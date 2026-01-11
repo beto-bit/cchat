@@ -1,6 +1,7 @@
 #include "clay.h"
 #include "renderer/clay_raylib.h"
 
+#include <math.h>
 #include <raylib.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -52,11 +53,20 @@ int main(void) {
                 .sizing = { .width = CLAY_SIZING_GROW(0), .height = CLAY_SIZING_GROW(0) },
                 .padding = CLAY_PADDING_ALL(20),
                 .childAlignment = { .x = CLAY_ALIGN_X_CENTER, .y = CLAY_ALIGN_Y_CENTER },
-                .layoutDirection = CLAY_TOP_TO_BOTTOM
+                .layoutDirection = CLAY_TOP_TO_BOTTOM,
             }}
         ) {
-            CLAY_TEXT(CLAY_STRING("CChat"), CLAY_TEXT_CONFIG({ .fontSize = 24, .textColor = CLAY_BLACK }));
-            CLAY_TEXT(CLAY_STRING("Sample text"), CLAY_TEXT_CONFIG({ .fontSize = 64, .textColor = CLAY_RED }));
+            CLAY_TEXT(CLAY_STRING("CChat"), CLAY_TEXT_CONFIG({ .fontSize = 64, .letterSpacing = 1, .textColor = CLAY_BLACK }));
+            CLAY(CLAY_ID("inner"), {
+                .layout = {
+                    .sizing = { .width = CLAY_SIZING_FIT(0), .height = CLAY_SIZING_FIT(0) },
+                    .childAlignment = { .x = CLAY_ALIGN_X_CENTER, .y = CLAY_ALIGN_Y_CENTER },
+                    .layoutDirection = CLAY_TOP_TO_BOTTOM,
+                },
+                .backgroundColor = CLAY_BLACK
+            }) {
+                CLAY_TEXT(CLAY_STRING("Sample text"), CLAY_TEXT_CONFIG({ .fontSize = 24, .letterSpacing = 10, .textColor = CLAY_RED }));
+            }
         }
         Clay_RenderCommandArray renderCommands = Clay_EndLayout();
 

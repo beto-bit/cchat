@@ -24,6 +24,16 @@ static inline Color clay_color_to_raylib_color(Clay_Color clayColor) {
     };
 }
 
+[[gnu::always_inline]]
+static inline Rectangle clay_bbox_to_raylib_rectangle(Clay_BoundingBox box) {
+    return (Rectangle) {
+        .x = box.x,
+        .y = box.y,
+        .height = box.height,
+        .width = box.width
+    };
+}
+
 
 Clay_Dimensions Raylib_MeasureText(
     Clay_StringSlice text,
@@ -72,6 +82,19 @@ Clay_Dimensions Raylib_MeasureText(
 }
 
 
+void Clay_Raylib_Initialize(int width, int height, const char *title, unsigned int flags) {
+    SetConfigFlags(flags);
+    InitWindow(width, height, title);
+}
+
+void Clay_Raylib_Close() {
+    free(temp_render_buffer);
+    temp_render_buffer_len = 0;
+
+    CloseWindow();
+}
+
+
 static void clay_render_text(Clay_BoundingBox boundingBox, Clay_TextRenderData* textData) {
     size_t sstrlen = (size_t) textData->stringContents.length + 1;
 
@@ -86,26 +109,34 @@ static void clay_render_text(Clay_BoundingBox boundingBox, Clay_TextRenderData* 
     memcpy(temp_render_buffer, textData->stringContents.chars, sstrlen - 1);
     temp_render_buffer[textData->stringContents.length] = '\0';
 
-    DrawText(
+    DrawTextEx(
+        GetFontDefault(),
         temp_render_buffer,
-        (int) boundingBox.x,
-        (int) boundingBox.y,
-        textData->fontSize,
+        (Vector2) { boundingBox.x, boundingBox.y },
+        (float) textData->fontSize,
+        (float) textData->letterSpacing,
         clay_color_to_raylib_color(textData->textColor)
     );
 }
 
-
-void Clay_Raylib_Initialize(int width, int height, const char *title, unsigned int flags) {
-    SetConfigFlags(flags);
-    InitWindow(width, height, title);
-}
-
-void Clay_Raylib_Close() {
-    free(temp_render_buffer);
-    temp_render_buffer_len = 0;
-
-    CloseWindow();
+static void clay_render_rectangle(Clay_BoundingBox boundingbox, Clay_RectangleRenderData* rectangleData) {
+    if (rectangleData->cornerRadius.topLeft > 0) {
+        float radius = (rectangleData->cornerRadius.topLeft * 2) / fminf(boundingbox.width, boundingbox.height);
+        DrawRectangleRounded(
+            clay_bbox_to_raylib_rectangle(boundingbox),
+            radius,
+            0,
+            clay_color_to_raylib_color(rectangleData->backgroundColor)
+        );
+    } else {
+        DrawRectangle(
+            (int) boundingbox.x,
+            (int) boundingbox.y,
+            (int) boundingbox.width,
+            (int) boundingbox.height,
+            clay_color_to_raylib_color(rectangleData->backgroundColor)
+        );
+    }
 }
 
 void Clay_Raylib_Render(Clay_RenderCommandArray renderCommands) {
@@ -124,13 +155,15 @@ void Clay_Raylib_Render(Clay_RenderCommandArray renderCommands) {
                 clay_render_text(boundingBox, &renderCommand->renderData.text);
                 break;
 
+            case CLAY_RENDER_COMMAND_TYPE_RECTANGLE:
+                clay_render_rectangle(boundingBox, &renderCommand->renderData.rectangle);
+                break;
+
             case CLAY_RENDER_COMMAND_TYPE_IMAGE: {
             }
             case CLAY_RENDER_COMMAND_TYPE_SCISSOR_START: {
             }
             case CLAY_RENDER_COMMAND_TYPE_SCISSOR_END: {
-            }
-            case CLAY_RENDER_COMMAND_TYPE_RECTANGLE: {
             }
             case CLAY_RENDER_COMMAND_TYPE_BORDER: {
             }
