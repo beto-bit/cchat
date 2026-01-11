@@ -15,12 +15,12 @@ CFLAGS := -std=c23 -g -O2 \
 			-isystem ./include/deps \
 			$(shell pkg-config --cflags raylib)
 
-LDFLAGS := $(shell pkg-config --libs raylib)
+LDFLAGS := $(shell pkg-config --libs raylib) -lm
 
 TARGET := build/cchat
 BUILDDIR := build
 
-SRCS := src/main.c
+SRCS := src/main.c src/renderer/clay_raylib.c
 OBJS := ${SRCS:%.c=${BUILDDIR}/%.o}
 
 
